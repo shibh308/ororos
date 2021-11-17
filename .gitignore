@@ -1,0 +1,7 @@
+/out/bin/*
+!/out/bin/.gitkeep
+/out/dump/*
+!/out/dump/.gitkeep
+/out/hex/*
+!/out/hex/.gitkeep
+docker_attach.sh
