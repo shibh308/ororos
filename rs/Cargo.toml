@@ -1,0 +1,16 @@
+[package]
+name = "ororos_rs"
+version = "0.1.0"
+
+[dependencies]
+
+[lib]
+crate-type = ["staticlib"]
+
+[profile.dev]
+opt-level = 0
+debug = false
+debug-assertions = false
+overflow-checks = false
+incremental = false
+panic = 'abort'
