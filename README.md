@@ -2,5 +2,6 @@
 
 ## Usage
 ```
-sh compile.sh src/os.c
+sh compile_rs.sh
+sh compile_os.sh
 ```

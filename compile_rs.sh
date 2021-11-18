@@ -14,7 +14,7 @@ DUMP_PATH=$OUT_DIR/dump/$BASENAME.dump
 DUMP_L_PATH=$OUT_DIR/dump/${BASENAME}_alias.dump
 
 cd rs/
-/root/.cargo/bin/cargo build --target riscv32i-unknown-none-elf
+/root/.cargo/bin/cargo +nightly build --target riscv32i-unknown-none-elf
 cd ../
 
 riscv64-unknown-elf-objdump -b elf32-littleriscv -M no-aliases -D $A_PATH | head -n 1000 > $DUMP_PATH
