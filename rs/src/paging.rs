@@ -32,9 +32,14 @@ impl Paging {
     pub fn unassign(&mut self, page_id: usize) {
         self.pages[page_id] = None;
     }
-    pub fn get_process(&mut self, prev: usize) -> usize {
+    pub fn exists(&mut self, idx: usize) -> bool {
+        self.pages[idx].is_some()
+    }
+    pub fn get_next_process(&mut self, prev: usize) -> usize {
         for i in 1..PAGE_NUM {
-            if i != prev && self.pages[i].is_some() {
+            if i != prev && self.exists(i) {
+                write_char('a');
+                write_char(i as u8 as char);
                 return i;
             }
         }
