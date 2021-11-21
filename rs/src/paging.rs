@@ -15,7 +15,6 @@ impl Paging {
         }
     }
     pub fn assign(&mut self, fn_ptr: fn()) -> usize {
-        // pid:0 と page_id:0 は使わない
         for i in 1..PAGE_NUM {
             if self.pages[i].is_none() {
                 self.pages[i] = Some(Process::new(i, fn_ptr));

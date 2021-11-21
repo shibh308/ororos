@@ -75,6 +75,14 @@ impl Process {
         set_clk_flg(false);
 
 
+        unsafe {
+            asm!(
+                "csrrsi a0,0x80,0",
+                "csrrsi a1,0x83,0",
+                "csrrsi sp,0x81,0",
+                "jr a1"
+            );
+        }
         /*
             TODO:
             ここからcsrrwsでOSとtask_finishedを読み込み, そこに飛ぶ

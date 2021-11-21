@@ -64,6 +64,7 @@ impl OS {
         out_buf.output_all();
 
         abort(); // とりあえずここで終わらせる
+        // TODO: 上の行を消してinterruptの動作確認
         self.interrupt();
     }
 
@@ -103,6 +104,21 @@ impl OS {
 #[no_mangle]
 fn __start_rust() {
     let mut os = OS::new();
+    unsafe {
+        let os_ptr = &os as *const _ as *const u32;
+        let interrupt_ptr: fn(&mut OS) = OS::interrupt;// as *const _ as *const fn();
+        let task_finished_ptr: fn(&mut OS) = OS::task_finished;// as *const _ as *const fn();
+
+        asm!(
+            "csrrw zero,0x80,{0}",
+            "csrrw zero,0x81,sp",
+            "csrrw zero,0x82,{1}",
+            "csrrw zero,0x83,{2}",
+            in(reg) os_ptr,
+            in(reg) interrupt_ptr,
+            in(reg) task_finished_ptr,
+        )
+    }
     os.main();
     abort();
 }
