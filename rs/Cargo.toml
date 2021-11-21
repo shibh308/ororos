@@ -3,6 +3,7 @@ name = "ororos_rs"
 version = "0.1.0"
 
 [dependencies]
+heapless = "0.7.8"
 
 [lib]
 crate-type = ["staticlib"]

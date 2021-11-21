@@ -17,8 +17,8 @@ cd rs/
 /root/.cargo/bin/cargo +nightly build --target riscv32i-unknown-none-elf
 cd ../
 
-riscv64-unknown-elf-objdump -b elf32-littleriscv -M no-aliases -D $A_PATH | head -n 1000 > $DUMP_PATH
-riscv64-unknown-elf-objdump -b elf32-littleriscv -D $A_PATH | head -n 1000 > $DUMP_L_PATH
+riscv64-unknown-elf-objdump -b elf32-littleriscv -M no-aliases -D $A_PATH | head -n 10000 > $DUMP_PATH
+riscv64-unknown-elf-objdump -b elf32-littleriscv -D $A_PATH | head -n 10000 > $DUMP_L_PATH
 
 riscv64-unknown-elf-gcc -march=rv32i -mabi=ilp32 -T $LD_PATH $BOOT_PATH $A_PATH -o $EXE_PATH -nostdlib
 

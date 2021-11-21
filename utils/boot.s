@@ -3,12 +3,9 @@
 .global _start
 
 _start:
-    lui     sp, %hi(stacks + 1024)
-    ori     sp, sp, %lo(stacks + 1024)
+    csrrwi  zero,0,0
+    lui     sp,%hi(4096)
+    ori     sp,sp,%lo(4096)
     j       __start_rust
 
 .bss
-
-.global stacks
-stacks:
-    .skip 1024
