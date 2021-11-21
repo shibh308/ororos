@@ -4,8 +4,8 @@
 
 _start:
     csrrwi  zero,0,0
-    lui     sp,%hi(4096)
-    ori     sp,sp,%lo(4096)
+    lui     sp,%hi(16384)
+    ori     sp,sp,%lo(16384)
     j       __start_rust
 
 .bss

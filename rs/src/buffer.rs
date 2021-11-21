@@ -4,19 +4,20 @@ use util::write_char;
 pub const BUF_END: u8 = !(0 as u8);
 
 pub struct ReadBuffer {
-    addr: usize
+    start_addr: usize,
+    now: usize,
 }
 
 impl ReadBuffer {
     pub fn new(addr: usize) -> ReadBuffer {
-        ReadBuffer { addr }
+        ReadBuffer { start_addr: addr, now: addr }
     }
 
     pub fn read(&mut self) -> u8 {
         unsafe {
-            let ptr = self.addr as *const u8;
+            let ptr = self.now as *const u8;
             let res = *ptr;
-            self.addr += 1;
+            self.now += 1;
             res
         }
     }
@@ -33,22 +34,33 @@ impl ReadBuffer {
 }
 
 pub struct WriteBuffer {
-    addr: usize
+    start_addr: usize,
+    now: usize,
 }
 
 impl WriteBuffer {
     pub fn new(addr: usize) -> WriteBuffer {
-        WriteBuffer { addr }
+        WriteBuffer { start_addr: addr, now: addr }
     }
 
     pub fn write(&mut self, x: u8) {
         unsafe {
-            let ptr = self.addr as *mut u8;
+            let ptr = self.now as *mut u8;
             *ptr = x;
-            self.addr += 1;
+            self.now += 1;
         }
     }
     pub fn close(&mut self) {
         self.write(BUF_END);
+    }
+    pub fn pipe(&mut self, rb: &mut ReadBuffer) {
+        loop {
+            let res = rb.read();
+            if res == BUF_END {
+                break;
+            }
+            self.write(res);
+        }
+        self.close();
     }
 }
