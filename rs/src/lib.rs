@@ -51,38 +51,6 @@ impl OS {
     }
 }
 
-/*
-
-   0:	fe010113          	addi	sp,sp,-32
-   4:	00112e23          	sw	ra,28(sp)
-   8:	00a12623          	sw	a0,12(sp)
-
-  clk:
-   c:	00000513          	li	a0,0
-  10:	00000097          	auipc	ra,0x0
-  14:	000080e7          	jalr	ra # 10 <task_finished+0x10>
-  18:	0040006f          	j	1c <task_finished+0x1c>
-
-  page_id:
-  1c:	00000513          	li	a0,0
-  20:	00000097          	auipc	ra,0x0
-  24:	000080e7          	jalr	ra # 20 <task_finished+0x20>
-  28:	00a12423          	sw	a0,8(sp)
-  2c:	0040006f          	j	30 <task_finished+0x30>
-
-  os.paging.unassign ← ここヤバくて, 8(sp)は未定義なはず
-  30:	00812583          	lw	a1,8(sp)
-  34:	00c12503          	lw	a0,12(sp)
-  38:	00000097          	auipc	ra,0x0
-  3c:	000080e7          	jalr	ra # 38 <task_finished+0x38>
-  40:	0040006f          	j	44 <task_finished+0x44>
-
-  unsafe asm ← 位置関係おかしくない！？
-  44:	00812503          	lw	a0,8(sp)
-  48:	01051073          	csrw	0x10,a0
-
-*/
-
 #[no_mangle]
 fn task_finished(os: &mut OS) {
     set_clk_flg(false);
