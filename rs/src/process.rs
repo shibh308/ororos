@@ -45,7 +45,6 @@ impl Process {
             asm!(
                 "csrrsi a0,0x80,0",
                 "csrrsi a1,0x83,0",
-                "csrrsi sp,0x81,0",
                 "jr a1"
             );
         }

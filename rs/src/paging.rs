@@ -38,8 +38,6 @@ impl Paging {
     pub fn get_next_process(&mut self, prev: usize) -> usize {
         for i in 1..PAGE_NUM {
             if i != prev && self.exists(i) {
-                write_char('a');
-                write_char(i as u8 as char);
                 return i;
             }
         }

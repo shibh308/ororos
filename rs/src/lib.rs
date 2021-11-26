@@ -52,7 +52,7 @@ impl OS {
 }
 
 #[no_mangle]
-fn task_finished(os: &mut OS) {
+fn task_finished() {
     set_clk_flg(false);
 
     let page_id = set_page_id(0);
@@ -72,14 +72,11 @@ fn task_finished(os: &mut OS) {
 
     out_buf.output_all();
 
-
-    interrupt(os);
+    interrupt();
 }
 
 #[no_mangle]
-fn interrupt(os: &mut OS) {
-
-    set_clk_flg(false);
+fn interrupt() {
 
     // csrにレジスタ退避
     unsafe {
@@ -128,18 +125,49 @@ fn interrupt(os: &mut OS) {
         os = &mut (*os_ptr);
     }
 
+    unsafe { asm!("csrrw zero,0x10,15") }
+    os.paging.exists(1);
+    unsafe { asm!("csrrw zero,0x10,15") }
+    os.paging.copy_from_csr(1);
+    unsafe { asm!("csrrw zero,0x10,15") }
+    os.paging.copy_to_csr(1);
+    unsafe { asm!("csrrw zero,0x10,16") }
+
     if prev_page_id != 0 && os.paging.exists(prev_page_id) {
         os.paging.copy_from_csr(prev_page_id);
     }
 
+    unsafe { asm!("csrrw zero,0x10,15") }
+    os.paging.exists(1);
+    unsafe { asm!("csrrw zero,0x10,15") }
+    os.paging.copy_from_csr(1);
+    unsafe { asm!("csrrw zero,0x10,15") }
+    os.paging.copy_to_csr(1);
+    unsafe { asm!("csrrw zero,0x10,16") }
+
     let page_id = os.paging.get_next_process(prev_page_id);
     write_char(page_id as u8 as char);
+
+    unsafe { asm!("csrrw zero,0x10,15") }
+    os.paging.exists(1);
+    unsafe { asm!("csrrw zero,0x10,15") }
+    os.paging.copy_from_csr(1);
+    unsafe { asm!("csrrw zero,0x10,15") }
+    os.paging.copy_to_csr(1);
+    unsafe { asm!("csrrw zero,0x10,16") }
 
     if page_id == 0 {
         abort(); // 生きてるタスクがなくなったので終了
     }
+    unsafe { asm!("csrrw zero,0x10,19") }
 
+    // TODO: ここが呼ばれているはずなんだけど, 呼べてない
     os.paging.copy_to_csr(page_id);
+
+    unsafe { asm!("csrrw zero,0x10,19") }
+
+    set_page_id(page_id); // TODO: この位置で合ってるか確認
+    set_clk_flg(true);
 
     // csrからレジスタ読み込み
     unsafe {
@@ -178,12 +206,12 @@ fn interrupt(os: &mut OS) {
             "csrrwi x31,63,0",
         );
     }
-    set_clk_flg(true);
     unsafe {
         // csrから読んだpcに飛ぶ
+        // TODO: s11が原因でバグってないか確認
         asm!(
-            "csrrwi a1,0x40,0",
-            "jr a1"
+            "csrrwi s11,0x40,0",
+            "jr s11"
         );
     }
 }
@@ -197,7 +225,6 @@ fn __start_rust() {
 
         asm!(
             "csrrw zero,0x80,{0}",
-            "csrrw zero,0x81,sp",
             "csrrw zero,0x82,{1}",
             "csrrw zero,0x83,{2}",
             in(reg) os_ptr,
