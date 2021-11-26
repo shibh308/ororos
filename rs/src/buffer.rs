@@ -56,8 +56,6 @@ impl WriteBuffer {
     pub fn pipe(&mut self, rb: &mut ReadBuffer) {
         loop {
             let res = rb.read();
-            write_char('d'); // TODO: ここの直後でinterruptしてる
-            write_char(res as char);
             if res == BUF_END {
                 break;
             }

@@ -85,15 +85,12 @@ fn task_finished() {
 
 #[no_mangle]
 fn interrupt() {
-
     // csrにレジスタ退避
     unsafe {
         asm!{
-            "csrrw zero,32,x0",
-            "csrrw zero,33,x1",
-            // 退避時にspが-32ズレるから, ここに入る値もズレる
-            // spだけ割り込み側で処理している
-            // "csrrw zero,34,x2",
+            // "csrrw zero,32,x0", zero
+            "csrrw zero,33,x1", // ra
+            // "csrrw zero,34,x2", sp
             "csrrw zero,35,x3",
             "csrrw zero,36,x4",
             "csrrw zero,37,x5",
@@ -189,7 +186,6 @@ fn interrupt() {
             "csrrwi x31,63,0",
             "csrrwi tp,0x40,0",
             // ↓こんな感じで適当な命令を挟むだけで死ぬので, 確認する
-            // "csrrw zero,0x10,tp", // TODO: ここが無いと壊れる (なんで？)
             "jr tp"
         );
     }
@@ -207,9 +203,6 @@ fn __start_rust() {
             "csrrw zero,0x81,sp",
             "csrrw zero,0x82,{1}",
             "csrrw zero,0x83,{2}",
-            "csrrw zero,0x10,{0}",
-            "csrrw zero,0x10,{1}",
-            "csrrw zero,0x10,{2}",
             in(reg) os_ptr,
             in(reg) interrupt,
             in(reg) task_finished,
