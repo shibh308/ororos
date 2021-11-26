@@ -39,8 +39,8 @@ impl OS {
         let mut in_buf = WriteBuffer::new(in_buf_addr);
 
         // 入力
-        in_buf.write(95);
-        in_buf.write(93);
+        in_buf.write(131);
+        in_buf.write(134);
         in_buf.close();
 
         self.paging.run(page_id);
@@ -54,6 +54,14 @@ impl OS {
 #[no_mangle]
 fn task_finished() {
     set_clk_flg(false);
+
+    unsafe {
+        asm!(
+            // __start_rustのspを持ってきて, それを使う
+            "csrrsi sp,0x81,0",
+            "addi sp,sp,-512",
+        )
+    }
 
     let page_id = set_page_id(0);
 
@@ -83,7 +91,9 @@ fn interrupt() {
         asm!{
             "csrrw zero,32,x0",
             "csrrw zero,33,x1",
-            "csrrw zero,34,x2",
+            // 退避時にspが-32ズレるから, ここに入る値もズレる
+            // spだけ割り込み側で処理している
+            // "csrrw zero,34,x2",
             "csrrw zero,35,x3",
             "csrrw zero,36,x4",
             "csrrw zero,37,x5",
@@ -113,6 +123,9 @@ fn interrupt() {
             "csrrw zero,61,x29",
             "csrrw zero,62,x30",
             "csrrw zero,63,x31",
+            // __start_rustのspを持ってきて, それを使う
+            "csrrsi sp,0x81,0",
+            "addi sp,sp,-512",
         }
     }
 
@@ -125,49 +138,19 @@ fn interrupt() {
         os = &mut (*os_ptr);
     }
 
-    unsafe { asm!("csrrw zero,0x10,15") }
-    os.paging.exists(1);
-    unsafe { asm!("csrrw zero,0x10,15") }
-    os.paging.copy_from_csr(1);
-    unsafe { asm!("csrrw zero,0x10,15") }
-    os.paging.copy_to_csr(1);
-    unsafe { asm!("csrrw zero,0x10,16") }
-
-    if prev_page_id != 0 && os.paging.exists(prev_page_id) {
-        os.paging.copy_from_csr(prev_page_id);
-    }
-
-    unsafe { asm!("csrrw zero,0x10,15") }
-    os.paging.exists(1);
-    unsafe { asm!("csrrw zero,0x10,15") }
-    os.paging.copy_from_csr(1);
-    unsafe { asm!("csrrw zero,0x10,15") }
-    os.paging.copy_to_csr(1);
-    unsafe { asm!("csrrw zero,0x10,16") }
+    os.paging.copy_from_csr(prev_page_id);
 
     let page_id = os.paging.get_next_process(prev_page_id);
     write_char(page_id as u8 as char);
 
-    unsafe { asm!("csrrw zero,0x10,15") }
-    os.paging.exists(1);
-    unsafe { asm!("csrrw zero,0x10,15") }
-    os.paging.copy_from_csr(1);
-    unsafe { asm!("csrrw zero,0x10,15") }
-    os.paging.copy_to_csr(1);
-    unsafe { asm!("csrrw zero,0x10,16") }
-
     if page_id == 0 {
         abort(); // 生きてるタスクがなくなったので終了
     }
-    unsafe { asm!("csrrw zero,0x10,19") }
 
-    // TODO: ここが呼ばれているはずなんだけど, 呼べてない
     os.paging.copy_to_csr(page_id);
 
-    unsafe { asm!("csrrw zero,0x10,19") }
-
-    set_page_id(page_id); // TODO: この位置で合ってるか確認
     set_clk_flg(true);
+    set_page_id(page_id); // TODO: この位置で合ってるか確認
 
     // csrからレジスタ読み込み
     unsafe {
@@ -204,14 +187,10 @@ fn interrupt() {
             "csrrwi x29,61,0",
             "csrrwi x30,62,0",
             "csrrwi x31,63,0",
-        );
-    }
-    unsafe {
-        // csrから読んだpcに飛ぶ
-        // TODO: s11が原因でバグってないか確認
-        asm!(
-            "csrrwi s11,0x40,0",
-            "jr s11"
+            "csrrwi tp,0x40,0",
+            // ↓こんな感じで適当な命令を挟むだけで死ぬので, 確認する
+            // "csrrw zero,0x10,tp", // TODO: ここが無いと壊れる (なんで？)
+            "jr tp"
         );
     }
 }
@@ -225,8 +204,12 @@ fn __start_rust() {
 
         asm!(
             "csrrw zero,0x80,{0}",
+            "csrrw zero,0x81,sp",
             "csrrw zero,0x82,{1}",
             "csrrw zero,0x83,{2}",
+            "csrrw zero,0x10,{0}",
+            "csrrw zero,0x10,{1}",
+            "csrrw zero,0x10,{2}",
             in(reg) os_ptr,
             in(reg) interrupt,
             in(reg) task_finished,

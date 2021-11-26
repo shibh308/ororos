@@ -4,9 +4,8 @@ use util::{set_clk_flg, set_page_id, write_char};
 pub struct Process {
     page_id: usize,
     fn_ptr: fn(),
-    pc: usize,
-    // TODO: ここはu32にするべきなんだけど, u32にすると動作がバグって死ぬ
-    reg: [u8; 32],
+    pc: u32,
+    reg: [u32; 32],
 }
 
 impl Process {
@@ -43,7 +42,6 @@ impl Process {
 
         unsafe {
             asm!(
-                "csrrsi a0,0x80,0",
                 "csrrsi a1,0x83,0",
                 "jr a1"
             );

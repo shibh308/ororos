@@ -2,7 +2,7 @@
 use process::Process;
 use util::{abort_str, write_char};
 
-const PAGE_NUM: usize = 0x10;      // 0x100
+const PAGE_NUM: usize = 0x10;
 // ページ管理の構造体
 pub struct Paging {
     pages: [Option<Process>; PAGE_NUM],
